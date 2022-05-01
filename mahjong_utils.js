@@ -12,14 +12,11 @@ MahjongUtil.prototype.isCallingWin = function () {
 
 
 MahjongUtil.prototype.isTriplet = function (arrOfThreeCards) {
-    debugger;
+
     if (!arrOfThreeCards || arrOfThreeCards.length != 3) {
         return false;
     }
-    let result = (Number(arrOfThreeCards[0]) === Number(arrOfThreeCards[1]) === Number(arrOfThreeCards[2]));
-    console.log(arrOfThreeCards);
-    console.log('isTriplet result: ', result);
-
+    let result = (arrOfThreeCards[0] == arrOfThreeCards[1] && arrOfThreeCards[0] == arrOfThreeCards[2]);
     return result;
 };
 
@@ -37,12 +34,13 @@ MahjongUtil.prototype.findSequence = function (remainingMahjongArr) {
     resultArr.push(incrementVal);
 
     for (let i = 0; i < remainingMahjongArr.length; i++) {
-        if(resultArr.length == 3){
-            return resultArr;
-        }
+
         if (remainingMahjongArr[i] == incrementVal + 1) {
             incrementVal = incrementVal + 1;
             resultArr.push(incrementVal);
+            if (resultArr.length == 3) {
+                return resultArr;
+            }
         }
     }
 
@@ -90,19 +88,19 @@ MahjongUtil.prototype.getSetOfCallingWinCards = function (mahjongStr) {
             return [];
         }
 
-        let mahjongArr = mahjongStr.split('').map(function(item) {
+        let mahjongArr = mahjongStr.split('').map(function (item) {
             return parseInt(item, 10);
         });
         mahjongArr.sort();
-        
-        debugger;
+
+
 
         let getIndexToBeInserted = function (array, value) {
             var low = 0,
                 high = array.length;
 
             while (low < high) {
-                var mid = (low + high) / 2;
+                var mid = (low + high) >>> 1;
                 if (array[mid] < value) low = mid + 1;
                 else high = mid;
             }
@@ -125,11 +123,10 @@ MahjongUtil.prototype.getSetOfCallingWinCards = function (mahjongStr) {
 
         let resultMap = {};
 
-        for (let idx = 1; idx < 2; idx++) {
+        for (let idx = 1; idx < 10; idx++) {
 
             //TODO
 
-            console.log('current idx: ' + idx);
             let numOfOccur = getNumOfOccurenceOfValInArr(mahjongArr, idx);
 
             if (numOfOccur < 4) {
@@ -138,14 +135,14 @@ MahjongUtil.prototype.getSetOfCallingWinCards = function (mahjongStr) {
                 let indexToBeInserted = getIndexToBeInserted(mahjongArr, idx);
                 let fullSetMahjongArr = JSON.parse(JSON.stringify(mahjongArr));
 
-                debugger;
+
                 fullSetMahjongArr.splice(indexToBeInserted, 0, idx);
 
                 let potentialEyesArr = this.findPotentialEyes(fullSetMahjongArr);
 
                 if (!!potentialEyesArr && potentialEyesArr.length > 0) {
 
-                    let resultSetOfArr = this.findWinningSet(potentialEyesArr, fullSetMahjongArr);
+                    let resultSetOfArr = this.findWinningSet(idx, potentialEyesArr, fullSetMahjongArr);
 
                     if (!!resultSetOfArr && resultSetOfArr.length == 5) {
                         resultMap[idx] = resultSetOfArr;
@@ -189,9 +186,9 @@ MahjongUtil.prototype.findFourMelds = function (meldsArr, mjArr) {
     if (!meldsArr) {
         meldsArr = [];
     }
-    
-    console.log("meldsArr: ", meldsArr);
-    console.log("mjArr: ", mjArr);
+
+    //console.log("meldsArr: ", meldsArr);
+    //console.log("mjArr: ", mjArr);
 
     if (meldsArr.length == 4) {
         return meldsArr;
@@ -200,7 +197,7 @@ MahjongUtil.prototype.findFourMelds = function (meldsArr, mjArr) {
     let idx = 0;
     let threeCards = mjArr.slice(idx, idx + 3); //get 111 from 111 222 333 444
 
-    debugger;
+
     if (this.isTriplet(threeCards)) {
 
         meldsArr.push(threeCards);
@@ -231,7 +228,7 @@ MahjongUtil.prototype.findFourMelds = function (meldsArr, mjArr) {
 
 };
 
-MahjongUtil.prototype.findWinningSet = function (potentialEyesArr, fullSetMahjongArr) {
+MahjongUtil.prototype.findWinningSet = function (potentialWinningCard, potentialEyesArr, fullSetMahjongArr) {
 
     /*
     findWinningSet:
@@ -248,6 +245,8 @@ MahjongUtil.prototype.findWinningSet = function (potentialEyesArr, fullSetMahjon
 
     //one meld = e.g. 111 / 123
 
+    console.log('findWinningSet potentialWinningCard: ' + potentialWinningCard);
+
     for (let i = 0; i < potentialEyesArr.length; i++) {
 
         let eyeVal = potentialEyesArr[i];
@@ -256,8 +255,10 @@ MahjongUtil.prototype.findWinningSet = function (potentialEyesArr, fullSetMahjon
 
         console.log('doing eyes: ' + eyeVal);
         let fourMeldsArr = this.findFourMelds([], arrayWithTwelveCards);
+
         if (!!fourMeldsArr && fourMeldsArr.length == 4) {
-            let winningSet = fourMeldsArr.push([eyeVal, eyeVal]);
+            let winningSet = fourMeldsArr;
+            winningSet.push([eyeVal, eyeVal]);
             return winningSet;
         }
 
